@@ -15,36 +15,6 @@ npm install
 
 This repo uses npm workspaces. The command above installs dependencies for all workspaces: `client`, `server`, and `shared`.
 
-## Run the client (Vite + React)
-
-- From the repository root:
-
-```sh
-npm run dev -w client
-```
-
-- Or from the `client` folder:
-
-```sh
-npm install
-npm run dev
-```
-
-## Run the server (Express + TypeScript)
-
-- From the repository root (recommended):
-
-```sh
-npm run dev -w server
-```
-
-- Or from the `server` folder:
-
-```sh
-npm install
-npm run dev
-```
-
 ## Build
 
 - Build shared package (if needed):
@@ -63,6 +33,36 @@ npm run build -w client
 
 ```sh
 npm run build -w server
+```
+
+## Run the server (Express + TypeScript)
+
+- From the repository root (recommended):
+
+```sh
+npm run dev -w server
+```
+
+- Or from the `server` folder:
+
+```sh
+npm install
+npm run dev
+```
+
+## Run the client (Vite + React)
+
+- From the repository root:
+
+```sh
+npm run dev -w client
+```
+
+- Or from the `client` folder:
+
+```sh
+npm install
+npm run dev
 ```
 
 ## Production start (server)

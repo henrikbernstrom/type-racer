@@ -3,7 +3,8 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
+  /* Force light appearance for native controls */
+  color-scheme: light;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
@@ -32,6 +33,7 @@
   grid-template-columns: 1fr 2fr;
   gap: 24px;
   align-items: start;
+  width: 100%;
 }
 
 @media (max-width: 900px) {
@@ -52,15 +54,95 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  display: block;
+  width: 100%;
   min-width: 320px;
   min-height: 100vh;
+}
+
+/* Ensure root container can span full page width */
+#root { width: 100%; }
+
+/* App background for non-admin pages */
+.site-bg {
+  background-image: url('/f1-cockpit-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* White-ish content panel for readability on image background */
+.panel {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(2px);
+}
+
+/* Stronger panel for critical readability (e.g., race words, results) */
+.panel-strong {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(2px);
+}
+
+/* Ensure readable dark text inside light panels */
+.panel,
+.panel-strong,
+.panel h1,
+.panel h2,
+.panel h3,
+.panel h4,
+.panel h5,
+.panel h6,
+.panel p,
+.panel span,
+.panel label,
+.panel div,
+.panel li {
+  color: #111827;
+}
+
+/* On non-admin pages (with site-bg), make tables semi-transparent */
+.site-bg .hs-table {
+  background: rgba(255, 255, 255, 0.9);
+}
+.site-bg .hs-header {
+  background: rgba(243, 244, 246, 0.95);
+  color: #111827;
+  font-weight: 700;
+}
+.site-bg .hs-row:nth-child(even) {
+  background: rgba(0, 0, 0, 0.03);
+}
+/* Make table text dark for readability on light backgrounds */
+.site-bg .hs-table,
+.site-bg .hs-header,
+.site-bg .hs-row,
+.site-bg .hs-cell {
+  color: #111827;
+}
+
+/* Dark mode tables on admin (non-site-bg pages): readable headers/text */
+@media (prefers-color-scheme: dark) {
+  .hs-table { background: #111827; }
+  .hs-header { background: #1f2937; color: #f9fafb; font-weight: 700; }
+  .hs-cell { color: #e5e7eb; }
+  .hs-header .hs-cell { color: #292a2b; }
+  .hs-row:nth-child(even) { background: rgba(255, 255, 255, 0.04); }
 }
 
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+}
+
+/* Make main title readable over image background */
+.site-bg h1 {
+  color: rgba(255, 255, 255, 0.92);
 }
 
 button {
@@ -71,6 +153,7 @@ button {
   font-weight: 500;
   font-family: inherit;
   background-color: #1a1a1a;
+  color: #ffffff;
   cursor: pointer;
   transition: border-color 0.25s;
 }
@@ -90,9 +173,32 @@ button:focus-visible {
   a:hover {
     color: #747bff;
   }
+  /* Admin (non-site-bg) button colors in light mode */
   button {
     background-color: #f9f9f9;
+    color: #333;
   }
+}
+
+/* Keep non-admin (site-bg) buttons styled dark with white text */
+.site-bg button {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+/* Always-light form controls regardless of OS theme */
+input,
+textarea,
+select {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af;
 }
 
 /* Responsive grid for race screen */
@@ -101,6 +207,7 @@ button:focus-visible {
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   align-items: start;
+  width: 100%;
 }
 
 @media (max-width: 900px) {
@@ -125,16 +232,16 @@ button:focus-visible {
   align-items: center;
 }
 
-/* 5-column layout: # | Name | CPS | Chars | Date */
-.hs-table.hs--5 .hs-header,
-.hs-table.hs--5 .hs-row {
-  grid-template-columns: 64px 1fr 120px 120px minmax(200px, 1fr);
-}
-
-/* 6-column layout: # | Name | Email | CPS | Chars | Date */
+/* 6-column layout (no email): # | Name | CPS | Time | Chars | Date */
 .hs-table.hs--6 .hs-header,
 .hs-table.hs--6 .hs-row {
-  grid-template-columns: 64px 1fr 200px 120px 120px minmax(200px, 1fr);
+  grid-template-columns: 64px 2fr 96px 110px 96px minmax(200px, 1fr);
+}
+
+/* 7-column layout (with email): # | Name | Email | CPS | Time | Chars | Date */
+.hs-table.hs--7 .hs-header,
+.hs-table.hs--7 .hs-row {
+  grid-template-columns: 64px 1.5fr 2fr 96px 110px 96px minmax(200px, 1fr);
 }
 
 /* 3-column layout: Name | Email | Created */
@@ -145,7 +252,8 @@ button:focus-visible {
 
 .hs-header {
   background: #f3f4f6;
-  font-weight: 600;
+  font-weight: 700;
+  color: #111827;
 }
 
 .hs-row:nth-child(even) {
@@ -153,7 +261,7 @@ button:focus-visible {
 }
 
 .hs-row.hs-me {
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(235, 200, 90, 0.8);
 }
 
 .hs-cell {
@@ -163,11 +271,11 @@ button:focus-visible {
 .hs-right { text-align: right; }
 
 @media (max-width: 900px) {
-  .hs-table.hs--5 .hs-header, .hs-table.hs--5 .hs-row {
-    grid-template-columns: 48px 1fr 96px 96px minmax(160px, 1fr);
-  }
   .hs-table.hs--6 .hs-header, .hs-table.hs--6 .hs-row {
-    grid-template-columns: 48px 1fr 160px 96px 96px minmax(160px, 1fr);
+    grid-template-columns: 48px 1fr 80px 90px 80px minmax(160px, 1fr);
+  }
+  .hs-table.hs--7 .hs-header, .hs-table.hs--7 .hs-row {
+    grid-template-columns: 48px 1fr 140px 80px 90px 80px minmax(160px, 1fr);
   }
   .hs-table.hs--3 .hs-header, .hs-table.hs--3 .hs-row {
     grid-template-columns: 1fr 1fr minmax(160px, 1fr);

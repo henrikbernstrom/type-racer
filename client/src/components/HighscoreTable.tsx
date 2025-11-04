@@ -7,15 +7,20 @@ type Props = {
   highlightName?: string
   highlightCps?: number
   showEmail?: boolean
+  showWhenEmpty?: boolean
+  uniqueOnly?: boolean
 }
 
-export default function HighscoreTable({ scores, highlightName, highlightCps, showEmail }: Props) {
+export default function HighscoreTable({ scores, highlightName, highlightCps, showEmail, showWhenEmpty, uniqueOnly }: Props) {
   const [list, setList] = useState<Highscore[]>([])
 
   useEffect(() => {
     let ignore = false
     if (!scores) {
-      fetch('/api/highscores')
+      const qs = new URLSearchParams()
+      qs.set('limit', '10')
+      if (uniqueOnly) qs.set('uniqueEmail', '1')
+      fetch(`/api/highscores?${qs.toString()}`)
         .then(r => (r.ok ? r.json() : []))
         .then((arr) => { if (!ignore) setList(arr ?? []) })
         .catch(() => { if (!ignore) setList([]) })
@@ -25,25 +30,35 @@ export default function HighscoreTable({ scores, highlightName, highlightCps, sh
       setList([])
     }
     return () => { ignore = true }
-  }, [scores])
+  }, [scores, uniqueOnly])
 
-  if (!list || list.length === 0) return null
+  const empty = !list || list.length === 0
+  if (empty && !showWhenEmpty) return null
 
   return (
     <div style={{ marginTop: 16 }}>
       <div style={{ overflowX: 'auto' }}>
-        <div data-testid="highscore-list" role="table" className={`hs-table ${showEmail ? 'hs--6' : 'hs--5'}`}>
+        <div data-testid="highscore-list" role="table" className={`hs-table ${showEmail ? 'hs--7' : 'hs--6'}`}>
           <div role="row" className="hs-header">
             <div role="columnheader" className="hs-cell">#</div>
             <div role="columnheader" className="hs-cell">Name</div>
             {showEmail && <div role="columnheader" className="hs-cell">Email</div>}
             <div role="columnheader" className="hs-cell hs-right">CPS</div>
+            <div role="columnheader" className="hs-cell hs-right">Time</div>
             <div role="columnheader" className="hs-cell hs-right">Chars</div>
             <div role="columnheader" className="hs-cell">Date</div>
           </div>
-          {list.map((h, i) => {
+          {!empty && list.map((h, i) => {
             const seconds = typeof h.durationMs === 'number' ? (h.durationMs / 1000) : (h.durationSeconds || 1)
             const rowCps = h.charsTyped && seconds ? (h.charsTyped / Math.max(0.1, seconds)) : h.cps
+            const timeText = `${seconds.toFixed(2).replace('.', ',')} sec`
+            const date = new Date(h.timestamp)
+            const y = date.getFullYear()
+            const mo = String(date.getMonth() + 1).padStart(2, '0')
+            const da = String(date.getDate()).padStart(2, '0')
+            const hh = String(date.getHours()).padStart(2, '0')
+            const mm = String(date.getMinutes()).padStart(2, '0')
+            const dateText = `${y}-${mo}-${da} ${hh}:${mm}`
             const isMe = highlightName && Math.abs((highlightCps ?? rowCps) - rowCps) < 1e-6 && h.name === highlightName
             return (
               <div role="row" key={h.id} className={`hs-row${isMe ? ' hs-me' : ''}`}>
@@ -51,8 +66,9 @@ export default function HighscoreTable({ scores, highlightName, highlightCps, sh
                 <div role="cell" className="hs-cell">{h.name}</div>
                 {showEmail && <div role="cell" className="hs-cell">{(h as any).email ?? ''}</div>}
                 <div role="cell" className="hs-cell hs-right" style={{ fontVariantNumeric: 'tabular-nums' }}>{rowCps.toFixed(2)}</div>
+                <div role="cell" className="hs-cell hs-right" style={{ fontVariantNumeric: 'tabular-nums' }}>{timeText}</div>
                 <div role="cell" className="hs-cell hs-right" style={{ fontVariantNumeric: 'tabular-nums' }}>{h.charsTyped}</div>
-                <div role="cell" className="hs-cell">{new Date(h.timestamp).toLocaleString()}</div>
+                <div role="cell" className="hs-cell" style={{ fontVariantNumeric: 'tabular-nums' }}>{dateText}</div>
               </div>
             )
           })}

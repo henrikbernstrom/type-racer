@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import CountdownTimer from './CountdownTimer'
 import TypingEngine from './TypingEngine'
 import RaceTrack from './RaceTrack'
@@ -8,11 +8,13 @@ type Props = {
   name: string
   email: string
   text: string
+  onResetToRegister?: () => void
+  useLeaderOpponent?: boolean
 }
 
 type Highscore = { id: string; name: string; cps: number; charsTyped: number; durationSeconds: number; timestamp: string }
 
-export default function RaceScreen({ name, email, text }: Props) {
+export default function RaceScreen({ name, email, text, onResetToRegister, useLeaderOpponent = true }: Props) {
   const totalChars = useMemo(() => text.replace(/\n/g, '').length, [text])
   const [started, setStarted] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(60)
@@ -21,8 +23,9 @@ export default function RaceScreen({ name, email, text }: Props) {
   const [progress, setProgress] = useState(0)
   const [topCps, setTopCps] = useState<number>(0)
   const [topAvailable, setTopAvailable] = useState<boolean>(true)
-  const [highscores, setHighscores] = useState<Highscore[] | null>(null)
-  const DEFAULT_OPPONENT_CPS = 3.5 // not used for ghost anymore; kept for potential future UI copy
+  const [highsKey, setHighsKey] = useState(0)
+  const [uniqueOnly, setUniqueOnly] = useState(false)
+  const DEFAULT_OPPONENT_CPS = 2.0 // gentle fallback when no highscores exist
   const [ended, setEnded] = useState(false)
   const [resultCps, setResultCps] = useState<number | null>(null)
   const [resultChars, setResultChars] = useState<number | null>(null)
@@ -70,16 +73,6 @@ export default function RaceScreen({ name, email, text }: Props) {
     }
   }, [started, ended, startedAt, elapsed])
 
-  // Load highscores initially so they're visible during the race
-  useEffect(() => {
-    let ignore = false
-    fetch('/api/highscores')
-      .then(r => (r.ok ? r.json() : []))
-      .then(arr => { if (!ignore) setHighscores(arr ?? []) })
-      .catch(() => { if (!ignore) setHighscores([]) })
-    return () => { ignore = true }
-  }, [])
-
   function handleProgress(ratio: number) {
     setProgress(ratio)
     if (!started && ratio > 0) {
@@ -106,15 +99,14 @@ export default function RaceScreen({ name, email, text }: Props) {
     setFinishElapsed(displaySeconds)
     setResultCps(cpsDisplay)
     setEnded(true)
-    setHighscores([])
     await fetch('/api/scores', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, charsTyped, durationMs: Math.max(1, Math.round(durMs)) }),
+      body: JSON.stringify({ name, email, charsTyped, durationMs: Math.max(1, Math.round(durMs)) }),
     }).catch(() => {})
+    // Recompute placement locally by fetching latest top 10 from server
     const res = await fetch('/api/highscores').catch(() => null)
-    const list = res && res.ok ? await res.json() : []
-    setHighscores(list)
+    const list: Highscore[] = res && res.ok ? await res.json() : []
     // Scroll to highscores on finish
     setTimeout(() => { highsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }, 0)
     // compute placement locally vs. top10
@@ -129,6 +121,8 @@ export default function RaceScreen({ name, email, text }: Props) {
     } catch {
       setPlacement(null)
     }
+    // Force HighscoreTable to re-fetch fresh data
+    setHighsKey(k => k + 1)
   }
 
   function handleDoneEarly() {
@@ -136,12 +130,44 @@ export default function RaceScreen({ name, email, text }: Props) {
     void handleEnd(1)
   }
 
+  function resetRace() {
+    // Reset all runtime state for a fresh race
+    setStarted(false)
+    setSecondsLeft(60)
+    setElapsed(0)
+    setStartedAt(null)
+    setProgress(0)
+    setEnded(false)
+    setResultCps(null)
+    setResultChars(null)
+    setFinishElapsed(null)
+    setPlacement(null)
+    setGhostElapsed(0)
+    // Keep highscores as-is; they update after next finish
+  }
+
+  function renderSalute() {
+    if (placement === 1) return `Outstanding, ${name}! You set the top score! 🏆`
+    if (placement != null && placement > 1 && placement <= 3) return `Glorious, ${name}! You made it to the podium! 🥇🥈🥉`
+    if (placement != null && placement > 0 && placement <= 10) return `Great job, ${name}! You made the highscore list! 🎉`
+    return `Well done, ${name}! Keep going! 💪`
+  }
+
   return (
     <div className="race-grid">
-      <div>
-        <RaceTrack playerProgress={progress} elapsedSeconds={elapsed} totalChars={totalChars} topScoreCps={topAvailable ? topCps : undefined} ghostElapsedSeconds={ghostElapsed} started={started} />
+      <div className="panel">
+        <h2 style={{ marginTop: 0, marginBottom: 12 }}>Race</h2>
+        <RaceTrack
+          playerProgress={progress}
+          elapsedSeconds={elapsed}
+          totalChars={totalChars}
+          topScoreCps={useLeaderOpponent && topAvailable ? topCps : DEFAULT_OPPONENT_CPS}
+          ghostElapsedSeconds={ghostElapsed}
+        />
         {!ended && (
-          <TypingEngine text={text} onProgress={handleProgress} onDone={handleDoneEarly} />
+          <div className="panel-strong" style={{ marginTop: 12, fontSize: 18 }}>
+            <TypingEngine text={text} onProgress={handleProgress} onDone={handleDoneEarly} />
+          </div>
         )}
         <div
           data-testid="countdown-display"
@@ -165,8 +191,8 @@ export default function RaceScreen({ name, email, text }: Props) {
           />
         )}
         {ended && (
-          <div style={{ marginTop: 16, textAlign: 'center' }}>
-            <div style={{ fontSize: 20, fontWeight: 700 }}>Your result</div>
+          <div className="panel-strong" style={{ marginTop: 12, textAlign: 'center' }}>
+            <div style={{ fontSize: 20, fontWeight: 700 }}>{renderSalute()}</div>
             <div style={{ marginTop: 4 }}>
               {resultChars != null && finishElapsed != null && (
                 <span>{resultChars} chars in {finishElapsed.toFixed(2)}s → <strong>{(resultCps ?? 0).toFixed(2)} cps</strong></span>
@@ -178,11 +204,32 @@ export default function RaceScreen({ name, email, text }: Props) {
             {placement == null && (
               <div style={{ marginTop: 8 }}>(Highscores unavailable)</div>
             )}
+            <div style={{ marginTop: 12 }}>
+              <button
+                onClick={() => { onResetToRegister ? onResetToRegister() : resetRace() }}
+                style={{ padding: '10px 14px', fontWeight: 600 }}
+              >
+                New race
+              </button>
+            </div>
           </div>
         )}
       </div>
-      <div ref={highsRef} id="highscores">
-        <HighscoreTable scores={highscores ?? []} highlightName={ended ? name : undefined} highlightCps={ended ? (resultCps ?? undefined) : undefined} />
+      <div className="panel" ref={highsRef} id="highscores">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h2 style={{ margin: 0 }}>Highscores</h2>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <input type="checkbox" checked={uniqueOnly} onChange={(e) => setUniqueOnly(e.target.checked)} />
+            Show only best score per player
+          </label>
+        </div>
+        <HighscoreTable
+          key={highsKey}
+          highlightName={ended ? name : undefined}
+          highlightCps={ended ? (resultCps ?? undefined) : undefined}
+          showWhenEmpty
+          uniqueOnly={uniqueOnly}
+        />
       </div>
     </div>
   )

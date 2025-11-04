@@ -58,14 +58,33 @@ function savePlayers(players: Player[]) {
   writeJSONAtomic(playersPath, players);
 }
 
-function getHighscores(): ScoreEntry[] {
+function getAllScores(): ScoreEntry[] {
   const arr = readJSON<ScoreEntry[]>(highscoresPath, []);
-  return arr.sort((a, b) => (b.cps - a.cps) || (new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())).slice(0, 10);
+  return arr;
 }
 
-function saveHighscores(scores: ScoreEntry[]) {
-  const top10 = scores.sort((a, b) => (b.cps - a.cps) || (new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())).slice(0, 10);
-  writeJSONAtomic(highscoresPath, top10);
+function saveAllScores(scores: ScoreEntry[]) {
+  writeJSONAtomic(highscoresPath, scores);
+}
+
+function sortScores(scores: ScoreEntry[]): ScoreEntry[] {
+  return [...scores].sort((a, b) => (b.cps - a.cps) || (new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()));
+}
+
+function uniqueBestByEmail(scores: ScoreEntry[]): ScoreEntry[] {
+  // Pick best (highest cps, tie by earlier timestamp) per unique player email; fallback to name when email missing
+  const bestMap = new Map<string, ScoreEntry>();
+  for (const s of scores) {
+    const key = (s.email && s.email.trim().toLowerCase()) || `name:${s.name.trim().toLowerCase()}`;
+    const prev = bestMap.get(key);
+    if (!prev) {
+      bestMap.set(key, s);
+      continue;
+    }
+    const better = (s.cps > prev.cps) || (Math.abs(s.cps - prev.cps) < 1e-9 && new Date(s.timestamp).getTime() < new Date(prev.timestamp).getTime());
+    if (better) bestMap.set(key, s);
+  }
+  return Array.from(bestMap.values());
 }
 
 // Validation
@@ -98,7 +117,7 @@ function nowISO() { return new Date().toISOString(); }
 function nameTaken(name: string): boolean {
   const n = name.toLowerCase();
   const players = getPlayers();
-  const highs = getHighscores();
+  const highs = getAllScores();
   return players.some(p => p.name.toLowerCase() === n) || highs.some(s => s.name.toLowerCase() === n);
 }
 
@@ -135,18 +154,31 @@ export function createApp() {
   });
 
   // Highscores
-  app.get("/api/highscores", (_req, res) => {
-    return res.json(getHighscores());
+  app.get("/api/highscores", (req, res) => {
+    const limitRaw = req.query.limit as string | undefined;
+    const uniqueEmailRaw = req.query.uniqueEmail as string | undefined;
+    let limit = 10;
+    if (typeof limitRaw === 'string') {
+      const n = Number(limitRaw);
+      if (!Number.isNaN(n)) limit = n;
+    }
+    const uniqueEmail = uniqueEmailRaw === '1' || uniqueEmailRaw === 'true';
+
+    let list = getAllScores();
+    if (uniqueEmail) list = uniqueBestByEmail(list);
+    list = sortScores(list);
+    if (limit > 0) list = list.slice(0, limit);
+    return res.json(list);
   });
 
   app.delete("/api/highscores", (_req, res) => {
     // Clear highscores file by saving empty list
-    saveHighscores([]);
+    saveAllScores([]);
     return res.status(204).end();
   });
 
   app.get("/api/highscores/top", (_req, res) => {
-    const arr = getHighscores();
+    const arr = sortScores(getAllScores());
     if (arr.length === 0) return res.status(404).end();
     return res.json(arr[0]);
   });
@@ -171,9 +203,9 @@ export function createApp() {
       timestamp: nowISO(),
     };
 
-    const scores = getHighscores();
+    const scores = getAllScores();
     scores.push(entry);
-    saveHighscores(scores);
+    saveAllScores(scores);
     return res.status(201).json(entry);
   });
 

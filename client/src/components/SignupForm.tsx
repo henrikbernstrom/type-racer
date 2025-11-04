@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 type Props = {
-  onSuccess: (data: { name: string; email: string }) => void;
+  onSuccess: (data: { name: string; email: string; leaderOpponent: boolean }) => void;
 };
 
 function validateEmail(email: string) {
@@ -12,6 +12,7 @@ function validateEmail(email: string) {
 export default function SignupForm({ onSuccess }: Props) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [leaderOpponent, setLeaderOpponent] = useState(true);
   const [touched, setTouched] = useState({ name: false, email: false });
   const [nameAvailable, setNameAvailable] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(false);
@@ -29,7 +30,7 @@ export default function SignupForm({ onSuccess }: Props) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const payload = { name, email };
+    const payload = { name, email, leaderOpponent };
     try {
       await fetch('/api/players', {
         method: 'POST',
@@ -93,6 +94,19 @@ export default function SignupForm({ onSuccess }: Props) {
               lineHeight: 1.4,
             }}
           />
+        </div>
+        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <input
+            id="opponent"
+            type="checkbox"
+            checked={leaderOpponent}
+            onChange={(e) => setLeaderOpponent(e.target.checked)}
+            style={{ width: 22, height: 22 }}
+          />
+          <label htmlFor="opponent" style={{ fontWeight: 600 }}>
+            Compete with the leader
+            <span style={{ display: 'block', fontWeight: 400 }}>(uncheck for classic 1 cps ghost)</span>
+          </label>
         </div>
       <button
         type="submit"

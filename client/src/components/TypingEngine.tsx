@@ -178,7 +178,7 @@ export default function TypingEngine({ text, onProgress, onDone }: Props) {
   }
 
   return (
-    <div>
+    <div style={{ padding: '0 8px' }}>
       {renderLine(visible[0], currentLineIndex)}
       {renderLine(visible[1], currentLineIndex + 1)}
       <textarea
@@ -192,7 +192,7 @@ export default function TypingEngine({ text, onProgress, onDone }: Props) {
           if (e.key === 'Enter') e.preventDefault()
         }}
         rows={3}
-        style={{ width: '100%', fontSize: 16, padding: 8, resize: 'vertical' }}
+        style={{ width: '98%', fontSize: 18, padding: 10, resize: 'vertical', marginTop: 12 }}
       />
     </div>
   )
