@@ -1,0 +1,29 @@
+[
+  {
+    "id": "fu8c9tv4sx60zlamm4yxns9",
+    "name": "Henke",
+    "cps": 6.205539579234145,
+    "charsTyped": 123,
+    "durationSeconds": 20,
+    "durationMs": 19821,
+    "timestamp": "2025-11-04T13:45:41.727Z"
+  },
+  {
+    "id": "idyhm4uc7no647524fyxds",
+    "name": "kalle",
+    "cps": 5.405405405405405,
+    "charsTyped": 123,
+    "durationSeconds": 23,
+    "durationMs": 22755,
+    "timestamp": "2025-11-04T13:46:18.312Z"
+  },
+  {
+    "id": "bxd50jan0nu8tbuutyat1e",
+    "name": "peter",
+    "cps": 0.5833041681249271,
+    "charsTyped": 35,
+    "durationSeconds": 60,
+    "durationMs": 60003,
+    "timestamp": "2025-11-04T13:49:38.659Z"
+  }
+]

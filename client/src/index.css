@@ -1,0 +1,175 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ghost car animation: from left 0% to 100% linearly */
+@keyframes hs-ghost-move {
+  from { left: 0%; }
+  to { left: 100%; }
+}
+
+.ghost-car {
+  position: absolute;
+  top: 24px;
+  opacity: 0.5;
+  transform: translateX(-50%);
+}
+
+/* Start page grid: form (1/3) left, highscores (2/3) right */
+.start-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .start-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+/* Responsive grid for race screen */
+.race-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .race-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Keep 50/50 at large widths too */
+
+/* Highscore table (div-based table layout) */
+.hs-table {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.hs-header,
+.hs-row {
+  display: grid;
+  align-items: center;
+}
+
+/* 5-column layout: # | Name | CPS | Chars | Date */
+.hs-table.hs--5 .hs-header,
+.hs-table.hs--5 .hs-row {
+  grid-template-columns: 64px 1fr 120px 120px minmax(200px, 1fr);
+}
+
+/* 6-column layout: # | Name | Email | CPS | Chars | Date */
+.hs-table.hs--6 .hs-header,
+.hs-table.hs--6 .hs-row {
+  grid-template-columns: 64px 1fr 200px 120px 120px minmax(200px, 1fr);
+}
+
+/* 3-column layout: Name | Email | Created */
+.hs-table.hs--3 .hs-header,
+.hs-table.hs--3 .hs-row {
+  grid-template-columns: 1fr 1fr minmax(200px, 1fr);
+}
+
+.hs-header {
+  background: #f3f4f6;
+  font-weight: 600;
+}
+
+.hs-row:nth-child(even) {
+  background: rgba(0,0,0,0.02);
+}
+
+.hs-row.hs-me {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.hs-cell {
+  padding: 10px 12px;
+}
+
+.hs-right { text-align: right; }
+
+@media (max-width: 900px) {
+  .hs-table.hs--5 .hs-header, .hs-table.hs--5 .hs-row {
+    grid-template-columns: 48px 1fr 96px 96px minmax(160px, 1fr);
+  }
+  .hs-table.hs--6 .hs-header, .hs-table.hs--6 .hs-row {
+    grid-template-columns: 48px 1fr 160px 96px 96px minmax(160px, 1fr);
+  }
+  .hs-table.hs--3 .hs-header, .hs-table.hs--3 .hs-row {
+    grid-template-columns: 1fr 1fr minmax(160px, 1fr);
+  }
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "q5ysnqvaavmgcnx8noa4pf",
+    "name": "Henke",
+    "email": "henke@penke.com",
+    "createdAt": "2025-11-04T13:45:17.698Z"
+  },
+  {
+    "id": "u11lbie8ubgcdvrgte3gil",
+    "name": "kalle",
+    "email": "kalle@balle.nu",
+    "createdAt": "2025-11-04T13:45:54.325Z"
+  },
+  {
+    "id": "s69fuop1nl9dza5d0rpqk5",
+    "name": "peter",
+    "email": "pelle@plutt.se",
+    "createdAt": "2025-11-04T13:48:37.030Z"
+  }
+]
