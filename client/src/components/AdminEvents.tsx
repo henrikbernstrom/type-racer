@@ -169,12 +169,12 @@ export default function AdminEvents() {
               </button>
             </div>
             <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }}>
-              <div className="hs-header" style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr max-content max-content', alignItems: 'center' }}>
-                <div className="hs-cell" style={{ fontWeight: 700 }}>Name</div>
-                <div className="hs-cell">Date</div>
-                <div className="hs-cell">Active</div>
-                <div className="hs-cell">Actions</div>
-                <div className="hs-cell" role="columnheader">
+              <div className="hs-header" style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 180px 44px', alignItems: 'center' }}>
+                <div className="hs-cell" style={{ fontWeight: 700, textAlign: 'left' }}>Name</div>
+                <div className="hs-cell" style={{ textAlign: 'left' }}>Date</div>
+                <div className="hs-cell" style={{ textAlign: 'center' }}>Active</div>
+                <div className="hs-cell" style={{ justifySelf: 'end' }}>Actions</div>
+                <div className="hs-cell" role="columnheader" style={{ textAlign: 'center' }}>
                   <input
                     ref={headerChk}
                     type="checkbox"
@@ -191,15 +191,15 @@ export default function AdminEvents() {
                 </div>
               </div>
               {events.map(ev => (
-                <div key={ev.id} className="hs-row" style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr max-content max-content', alignItems: 'center' }}>
-                  <div className="hs-cell">{ev.name}</div>
-                  <div className="hs-cell">{ev.date || '-'}</div>
-                  <div className="hs-cell">{ev.active ? 'Yes' : 'No'}</div>
-                  <div className="hs-cell" style={{ display: 'inline-flex', gap: 8 }}>
+                <div key={ev.id} className="hs-row" style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 180px 44px', alignItems: 'center' }}>
+                  <div className="hs-cell" style={{ textAlign: 'left' }}>{ev.name}</div>
+                  <div className="hs-cell" style={{ textAlign: 'left' }}>{ev.date || '-'}</div>
+                  <div className="hs-cell" style={{ textAlign: 'center' }}>{ev.active ? 'Yes' : 'No'}</div>
+                  <div className="hs-cell" style={{ display: 'inline-flex', gap: 8, justifySelf: 'end' }}>
                     <button onClick={() => setEditing(ev)} style={{ padding: '8px 10px' }}>Edit</button>
                     <button onClick={() => activate(ev.id)} disabled={!!ev.active} style={{ padding: '8px 10px' }}>Activate</button>
                   </div>
-                  <div className="hs-cell" role="cell">
+                  <div className="hs-cell" role="cell" style={{ textAlign: 'center' }}>
                     <input
                       type="checkbox"
                       aria-label={`Select event ${ev.name}`}
