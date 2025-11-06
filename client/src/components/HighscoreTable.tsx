@@ -10,9 +10,10 @@ type Props = {
   showWhenEmpty?: boolean
   uniqueOnly?: boolean
   onSelectionChange?: (ids: string[]) => void
+  eventId?: string
 }
 
-export default function HighscoreTable({ scores, highlightName, highlightCps, showEmail, showWhenEmpty, uniqueOnly, onSelectionChange }: Props) {
+export default function HighscoreTable({ scores, highlightName, highlightCps, showEmail, showWhenEmpty, uniqueOnly, onSelectionChange, eventId }: Props) {
   const [list, setList] = useState<Highscore[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const headerChk = useRef<HTMLInputElement | null>(null)
@@ -24,6 +25,7 @@ export default function HighscoreTable({ scores, highlightName, highlightCps, sh
       const qs = new URLSearchParams()
       qs.set('limit', '10')
       if (uniqueOnly) qs.set('uniqueEmail', '1')
+      if (eventId) qs.set('eventId', eventId)
       fetch(`/api/highscores?${qs.toString()}`)
         .then(r => (r.ok ? r.json() : []))
         .then((arr) => { if (!ignore) setList(arr ?? []) })
@@ -34,7 +36,7 @@ export default function HighscoreTable({ scores, highlightName, highlightCps, sh
       setList([])
     }
     return () => { ignore = true }
-  }, [scores, uniqueOnly])
+  }, [scores, uniqueOnly, eventId])
 
   // Clear selection when list changes
   useEffect(() => {

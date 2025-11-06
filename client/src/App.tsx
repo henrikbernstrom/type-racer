@@ -10,12 +10,39 @@ function App() {
   const path = typeof window !== 'undefined' ? window.location.pathname : '/'
   const isAdmin = path === '/admin'
   const [uniqueOnly, setUniqueOnly] = useState(false)
+  const [eventId, setEventId] = useState<string>('default')
+  const [eventName, setEventName] = useState<string>('Default')
 
   useEffect(() => {
     if (typeof document !== 'undefined') {
       document.title = isAdmin ? 'Type Racer - Admin' : 'Type Racer'
     }
   }, [isAdmin])
+
+  // Load active event
+  useEffect(() => {
+    let ignore = false
+    fetch('/api/events/active')
+      .then(r => (r.ok ? r.json() : null))
+      .then((ev) => { if (!ignore && ev) { setEventId(ev.id); setEventName(ev.name || 'Default') } })
+      .catch(() => {})
+    return () => { ignore = true }
+  }, [])
+
+  // Live updates: subscribe to active event changes
+  useEffect(() => {
+    const es = new EventSource('/api/events/active/stream')
+    es.onmessage = (e) => {
+      try {
+        const ev = JSON.parse(e.data)
+        if (ev && ev.id) { setEventId(ev.id); setEventName(ev.name || 'Default') }
+      } catch {}
+    }
+    es.onerror = () => {
+      // keep SSE simple; browser will retry automatically
+    }
+    return () => { es.close() }
+  }, [])
 
   return (
     <div className={!isAdmin ? 'site-bg' : undefined} style={{ width: '98%', margin: 0, padding: 16, minHeight: '95vh' }}>
@@ -26,17 +53,17 @@ function App() {
         <div className="start-grid">
           <div className="panel">
             <h2 style={{ marginTop: 0, marginBottom: 12 }}>Register</h2>
-            <SignupForm onSuccess={setPlayer} />
+            <SignupForm onSuccess={setPlayer} eventId={eventId} />
           </div>
           <div className="panel">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <h2 style={{ margin: 0 }}>Highscores</h2>
+              <h2 style={{ margin: 0 }}>Highscores — {eventName}</h2>
               <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <input type="checkbox" checked={uniqueOnly} onChange={(e) => setUniqueOnly(e.target.checked)} />
                 Show only best score per player
               </label>
             </div>
-            <HighscoreTable showWhenEmpty uniqueOnly={uniqueOnly} />
+            <HighscoreTable showWhenEmpty uniqueOnly={uniqueOnly} eventId={eventId} />
           </div>
         </div>
       ) : (
@@ -44,6 +71,7 @@ function App() {
           name={player.name}
           email={player.email}
           text={SAMPLE_TEXT}
+          eventId={eventId}
           useLeaderOpponent={player.leaderOpponent}
           onResetToRegister={() => setPlayer(null)}
         />

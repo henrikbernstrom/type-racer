@@ -275,6 +275,12 @@ textarea::placeholder {
   grid-template-columns: 1fr 1fr minmax(200px, 1fr) 40px;
 }
 
+/* 2+select layout for players without name: Email | Created | [sel] */
+.hs-table.hs--2sel .hs-header,
+.hs-table.hs--2sel .hs-row {
+  grid-template-columns: 1fr minmax(200px, 1fr) 40px;
+}
+
 .hs-header {
   background: #f3f4f6;
   font-weight: 700;
@@ -313,5 +319,8 @@ textarea::placeholder {
   }
   .hs-table.hs--3sel .hs-header, .hs-table.hs--3sel .hs-row {
     grid-template-columns: 1fr 1fr minmax(160px, 1fr) 36px;
+  }
+  .hs-table.hs--2sel .hs-header, .hs-table.hs--2sel .hs-row {
+    grid-template-columns: 1fr minmax(160px, 1fr) 36px;
   }
 }

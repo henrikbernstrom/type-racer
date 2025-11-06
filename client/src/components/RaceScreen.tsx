@@ -10,11 +10,12 @@ type Props = {
   text: string
   onResetToRegister?: () => void
   useLeaderOpponent?: boolean
+  eventId?: string
 }
 
 type Highscore = { id: string; name: string; cps: number; charsTyped: number; durationSeconds: number; timestamp: string }
 
-export default function RaceScreen({ name, email, text, onResetToRegister, useLeaderOpponent = true }: Props) {
+export default function RaceScreen({ name, email, text, onResetToRegister, useLeaderOpponent = true, eventId }: Props) {
   const totalChars = useMemo(() => text.replace(/\n/g, '').length, [text])
   const [started, setStarted] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(60)
@@ -37,7 +38,8 @@ export default function RaceScreen({ name, email, text, onResetToRegister, useLe
 
   useEffect(() => {
     let ignore = false
-    fetch('/api/highscores/top')
+    const qs = new URLSearchParams(); if (eventId) qs.set('eventId', eventId)
+    fetch(`/api/highscores/top?${qs.toString()}`)
       .then(r => {
         if (!r.ok) { setTopAvailable(false); return null }
         setTopAvailable(true)
@@ -48,7 +50,7 @@ export default function RaceScreen({ name, email, text, onResetToRegister, useLe
       })
       .catch(() => {})
     return () => { ignore = true }
-  }, [])
+  }, [eventId])
 
   // Smoothly update ghost elapsed time while race is running so the ghost moves fluidly.
   useEffect(() => {
@@ -99,13 +101,14 @@ export default function RaceScreen({ name, email, text, onResetToRegister, useLe
     setFinishElapsed(displaySeconds)
     setResultCps(cpsDisplay)
     setEnded(true)
-    await fetch('/api/scores', {
+    const qs = new URLSearchParams(); if (eventId) qs.set('eventId', eventId)
+    await fetch(`/api/scores?${qs.toString()}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, charsTyped, durationMs: Math.max(1, Math.round(durMs)) }),
     }).catch(() => {})
     // Recompute placement locally by fetching latest top 10 from server
-    const res = await fetch('/api/highscores').catch(() => null)
+    const res = await fetch(`/api/highscores?${qs.toString()}`).catch(() => null)
     const list: Highscore[] = res && res.ok ? await res.json() : []
     // Scroll to highscores on finish
     setTimeout(() => { highsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }, 0)
@@ -229,6 +232,7 @@ export default function RaceScreen({ name, email, text, onResetToRegister, useLe
           highlightCps={ended ? (resultCps ?? undefined) : undefined}
           showWhenEmpty
           uniqueOnly={uniqueOnly}
+          eventId={eventId}
         />
       </div>
     </div>

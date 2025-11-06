@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 type Props = {
   onSuccess: (data: { name: string; email: string; leaderOpponent: boolean }) => void;
+  eventId?: string;
 };
 
 function validateEmail(email: string) {
@@ -9,7 +10,7 @@ function validateEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-export default function SignupForm({ onSuccess }: Props) {
+export default function SignupForm({ onSuccess, eventId }: Props) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [leaderOpponent, setLeaderOpponent] = useState(true);
@@ -32,7 +33,8 @@ export default function SignupForm({ onSuccess }: Props) {
     e.preventDefault();
     const payload = { name, email, leaderOpponent };
     try {
-      await fetch('/api/players', {
+      const qs = new URLSearchParams(); if (eventId) qs.set('eventId', eventId)
+      await fetch(`/api/players?${qs.toString()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
