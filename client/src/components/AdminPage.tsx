@@ -48,6 +48,20 @@ export default function AdminPage() {
     return () => { es.close() }
   }, [])
 
+  // Immediate updates when events page activates an event
+  useEffect(() => {
+    const onImmediateUpdate = (e: Event) => {
+      const ce = e as CustomEvent<any>
+      const ev = ce.detail
+      if (ev && ev.id) {
+        setEventId(ev.id)
+        setActiveEventName(ev.name || 'Default')
+      }
+    }
+    window.addEventListener('active-event-updated', onImmediateUpdate)
+    return () => window.removeEventListener('active-event-updated', onImmediateUpdate)
+  }, [])
+
   // Load players for selected event
   useEffect(() => {
     let ignore = false
@@ -180,14 +194,12 @@ export default function AdminPage() {
   return (
     <div style={{ width: '98%', padding: 16 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24, alignItems: 'stretch' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 12 }}>
           <div style={{ display: 'inline-flex', gap: 8 }}>
             <button onClick={() => setTab('data')} aria-pressed={tab==='data'} style={{ padding: '8px 12px', fontWeight: 600, border: tab==='data' ? '2px solid #646cff' : undefined }}>Data</button>
             <button onClick={() => setTab('events')} aria-pressed={tab==='events'} style={{ padding: '8px 12px', fontWeight: 600, border: tab==='events' ? '2px solid #646cff' : undefined }}>Events</button>
           </div>
-          {tab === 'data' && (
-            <div style={{ fontWeight: 600 }}>Active event: <span style={{ fontWeight: 700 }}>{activeEventName}</span></div>
-          )}
+          <div style={{ fontWeight: 600, paddingLeft: 16 }}>Active event - {activeEventName}</div>
         </div>
         {tab === 'events' ? (
           <AdminEvents />

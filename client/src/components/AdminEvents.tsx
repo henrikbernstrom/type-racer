@@ -80,6 +80,11 @@ export default function AdminEvents() {
       setError(null)
       const res = await fetch(`/api/events/${id}/activate`, { method: 'POST' })
       if (!res.ok) throw new Error('Failed to activate event')
+      // Immediately broadcast the newly active event so other admin views can update without waiting for SSE or reload
+      const ev = events.find(e => e.id === id)
+      if (ev) {
+        window.dispatchEvent(new CustomEvent('active-event-updated', { detail: { id: ev.id, name: ev.name } }))
+      }
       await load()
     } catch (e: any) {
       setError(e?.message || 'Failed to activate event')
