@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 
 export type EventInfo = { id: string; name: string; description?: string; date?: string; createdAt: string; active?: boolean }
 
@@ -29,6 +30,18 @@ export default function AdminEvents() {
   }
 
   useEffect(() => { void load() }, [])
+
+  // ESC cancels editing (unless delete modal is open)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && editing && !modalOpen) {
+        e.stopPropagation();
+        setEditing(null)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [editing, modalOpen])
 
   async function createEvent() {
     try {
@@ -130,75 +143,90 @@ export default function AdminEvents() {
             </div>
           </div>
           <div>
-            {!editing ? (
-              <>
-                <h3 style={{ marginTop: 0 }}>Create event</h3>
-                <div className="panel" style={{ padding: 12 }}>
-                  <div style={{ marginBottom: 8 }}>
-                    <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Name</label>
-                    <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid #d1d5db', outline: 'none', boxSizing: 'border-box', fontSize: 16, lineHeight: 1.4 }}
-                    />
+            <AnimatePresence mode="popLayout" initial={false}>
+              {!editing && (
+                <motion.div
+                  key="create"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <h3 style={{ marginTop: 0 }}>Create event</h3>
+                  <div className="panel" style={{ padding: 12 }}>
+                    <div style={{ marginBottom: 8 }}>
+                      <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Name</label>
+                      <input
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid #d1d5db', outline: 'none', boxSizing: 'border-box', fontSize: 16, lineHeight: 1.4 }}
+                      />
+                    </div>
+                    <div style={{ marginBottom: 8 }}>
+                      <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Description</label>
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid #d1d5db', outline: 'none', boxSizing: 'border-box', fontSize: 16, lineHeight: 1.4, minHeight: 96 }}
+                      />
+                    </div>
+                    <div style={{ marginBottom: 8 }}>
+                      <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Date</label>
+                      <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid #d1d5db', outline: 'none', boxSizing: 'border-box', fontSize: 16, lineHeight: 1.4 }}
+                      />
+                    </div>
+                    <button onClick={createEvent} disabled={!name.trim()} style={{ padding: '10px 14px', fontWeight: 600 }}>Create</button>
                   </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Description</label>
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid #d1d5db', outline: 'none', boxSizing: 'border-box', fontSize: 16, lineHeight: 1.4, minHeight: 96 }}
-                    />
+                </motion.div>
+              )}
+              {editing && (
+                <motion.div
+                  key="edit"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <div style={{ marginBottom: 8, color: '#6b7280', fontStyle: 'italic' }}>Create event — Visible when editing event is done</div>
+                  <h3 style={{ marginTop: 0 }}>Edit event</h3>
+                  <div className="panel" style={{ padding: 12 }}>
+                    <div style={{ marginBottom: 8 }}>
+                      <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Name</label>
+                      <input
+                        value={editing.name}
+                        onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                        style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid #d1d5db', outline: 'none', boxSizing: 'border-box', fontSize: 16, lineHeight: 1.4 }}
+                      />
+                    </div>
+                    <div style={{ marginBottom: 8 }}>
+                      <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Description</label>
+                      <textarea
+                        value={editing.description || ''}
+                        onChange={(e) => setEditing({ ...editing, description: e.target.value })}
+                        style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid #d1d5db', outline: 'none', boxSizing: 'border-box', fontSize: 16, lineHeight: 1.4, minHeight: 96 }}
+                      />
+                    </div>
+                    <div style={{ marginBottom: 8 }}>
+                      <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Date</label>
+                      <input
+                        type="date"
+                        value={editing.date || ''}
+                        onChange={(e) => setEditing({ ...editing, date: e.target.value })}
+                        style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid #d1d5db', outline: 'none', boxSizing: 'border-box', fontSize: 16, lineHeight: 1.4 }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={updateEvent} style={{ padding: '10px 14px', fontWeight: 600 }}>Save</button>
+                      <button onClick={() => setEditing(null)} style={{ padding: '10px 14px' }}>Cancel</button>
+                    </div>
                   </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Date</label>
-                    <input
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid #d1d5db', outline: 'none', boxSizing: 'border-box', fontSize: 16, lineHeight: 1.4 }}
-                    />
-                  </div>
-                  <button onClick={createEvent} disabled={!name.trim()} style={{ padding: '10px 14px', fontWeight: 600 }}>Create</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={{ marginBottom: 8, color: '#6b7280', fontStyle: 'italic' }}>Create event — Visible when editing event is done</div>
-                <h3 style={{ marginTop: 0 }}>Edit event</h3>
-                <div className="panel" style={{ padding: 12 }}>
-                  <div style={{ marginBottom: 8 }}>
-                    <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Name</label>
-                    <input
-                      value={editing.name}
-                      onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                      style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid #d1d5db', outline: 'none', boxSizing: 'border-box', fontSize: 16, lineHeight: 1.4 }}
-                    />
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Description</label>
-                    <textarea
-                      value={editing.description || ''}
-                      onChange={(e) => setEditing({ ...editing, description: e.target.value })}
-                      style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid #d1d5db', outline: 'none', boxSizing: 'border-box', fontSize: 16, lineHeight: 1.4, minHeight: 96 }}
-                    />
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Date</label>
-                    <input
-                      type="date"
-                      value={editing.date || ''}
-                      onChange={(e) => setEditing({ ...editing, date: e.target.value })}
-                      style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid #d1d5db', outline: 'none', boxSizing: 'border-box', fontSize: 16, lineHeight: 1.4 }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={updateEvent} style={{ padding: '10px 14px', fontWeight: 600 }}>Save</button>
-                    <button onClick={() => setEditing(null)} style={{ padding: '10px 14px' }}>Cancel</button>
-                  </div>
-                </div>
-              </>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       )}

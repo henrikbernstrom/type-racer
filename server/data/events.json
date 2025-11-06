@@ -3,7 +3,7 @@
     "id": "default",
     "name": "ITE Fair",
     "createdAt": "2025-11-06T13:31:49.051Z",
-    "active": true,
+    "active": false,
     "description": "The ITE Fair in Halmstad.",
     "date": "2025-11-05"
   },
@@ -13,6 +13,6 @@
     "description": "Vi håller en KLunch och visar vår lilla Type Racer.",
     "date": "2025-12-01",
     "createdAt": "2025-11-06T13:53:51.524Z",
-    "active": false
+    "active": true
   }
 ]
