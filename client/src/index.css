@@ -164,6 +164,13 @@ button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+button:disabled:hover {
+  border-color: transparent;
+}
 
 @media (prefers-color-scheme: light) {
   :root {
@@ -244,10 +251,28 @@ textarea::placeholder {
   grid-template-columns: 64px 1.5fr 2fr 96px 110px 96px minmax(200px, 1fr);
 }
 
+/* 7+select layout (no email): [sel] | # | Name | CPS | Time | Chars | Date */
+.hs-table.hs--6sel .hs-header,
+.hs-table.hs--6sel .hs-row {
+  grid-template-columns: 64px 2fr 96px 110px 96px minmax(200px, 1fr) 40px;
+}
+
+/* 8+select layout (with email): [sel] | # | Name | Email | CPS | Time | Chars | Date */
+.hs-table.hs--7sel .hs-header,
+.hs-table.hs--7sel .hs-row {
+  grid-template-columns: 64px 1.5fr 2fr 96px 110px 96px minmax(200px, 1fr) 40px;
+}
+
 /* 3-column layout: Name | Email | Created */
 .hs-table.hs--3 .hs-header,
 .hs-table.hs--3 .hs-row {
   grid-template-columns: 1fr 1fr minmax(200px, 1fr);
+}
+
+/* 4+select layout for players: [sel] | Name | Email | Created */
+.hs-table.hs--3sel .hs-header,
+.hs-table.hs--3sel .hs-row {
+  grid-template-columns: 1fr 1fr minmax(200px, 1fr) 40px;
 }
 
 .hs-header {
@@ -277,7 +302,16 @@ textarea::placeholder {
   .hs-table.hs--7 .hs-header, .hs-table.hs--7 .hs-row {
     grid-template-columns: 48px 1fr 140px 80px 90px 80px minmax(160px, 1fr);
   }
+  .hs-table.hs--6sel .hs-header, .hs-table.hs--6sel .hs-row {
+    grid-template-columns: 48px 1fr 80px 90px 80px minmax(160px, 1fr) 36px;
+  }
+  .hs-table.hs--7sel .hs-header, .hs-table.hs--7sel .hs-row {
+    grid-template-columns: 48px 1fr 140px 80px 90px 80px minmax(160px, 1fr) 36px;
+  }
   .hs-table.hs--3 .hs-header, .hs-table.hs--3 .hs-row {
     grid-template-columns: 1fr 1fr minmax(160px, 1fr);
+  }
+  .hs-table.hs--3sel .hs-header, .hs-table.hs--3sel .hs-row {
+    grid-template-columns: 1fr 1fr minmax(160px, 1fr) 36px;
   }
 }

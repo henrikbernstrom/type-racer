@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export type Highscore = { id: string; name: string; cps: number; charsTyped: number; durationSeconds: number; durationMs?: number; timestamp: string }
 
@@ -9,10 +9,14 @@ type Props = {
   showEmail?: boolean
   showWhenEmpty?: boolean
   uniqueOnly?: boolean
+  onSelectionChange?: (ids: string[]) => void
 }
 
-export default function HighscoreTable({ scores, highlightName, highlightCps, showEmail, showWhenEmpty, uniqueOnly }: Props) {
+export default function HighscoreTable({ scores, highlightName, highlightCps, showEmail, showWhenEmpty, uniqueOnly, onSelectionChange }: Props) {
   const [list, setList] = useState<Highscore[]>([])
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const headerChk = useRef<HTMLInputElement | null>(null)
+  const selectable = typeof onSelectionChange === 'function'
 
   useEffect(() => {
     let ignore = false
@@ -32,13 +36,26 @@ export default function HighscoreTable({ scores, highlightName, highlightCps, sh
     return () => { ignore = true }
   }, [scores, uniqueOnly])
 
+  // Clear selection when list changes
+  useEffect(() => {
+    setSelected(new Set())
+  }, [list])
+
+  // Update indeterminate state and notify parent on selection change
+  useEffect(() => {
+    if (headerChk.current) {
+      headerChk.current.indeterminate = selected.size > 0 && selected.size < list.length
+    }
+    onSelectionChange?.(Array.from(selected))
+  }, [selected, list.length, onSelectionChange])
+
   const empty = !list || list.length === 0
   if (empty && !showWhenEmpty) return null
 
   return (
     <div style={{ marginTop: 16 }}>
       <div style={{ overflowX: 'auto' }}>
-        <div data-testid="highscore-list" role="table" className={`hs-table ${showEmail ? 'hs--7' : 'hs--6'}`}>
+        <div data-testid="highscore-list" role="table" className={`hs-table ${showEmail ? (selectable ? 'hs--7sel' : 'hs--7') : (selectable ? 'hs--6sel' : 'hs--6')}`}>
           <div role="row" className="hs-header">
             <div role="columnheader" className="hs-cell">#</div>
             <div role="columnheader" className="hs-cell">Name</div>
@@ -47,6 +64,23 @@ export default function HighscoreTable({ scores, highlightName, highlightCps, sh
             <div role="columnheader" className="hs-cell hs-right">Time</div>
             <div role="columnheader" className="hs-cell hs-right">Chars</div>
             <div role="columnheader" className="hs-cell">Date</div>
+            {selectable && (
+              <div role="columnheader" className="hs-cell">
+                <input
+                  ref={headerChk}
+                  type="checkbox"
+                  aria-label="Select all highscores"
+                  checked={selected.size > 0 && selected.size === list.length}
+                  onChange={(e) => {
+                    const next = new Set<string>()
+                    if (e.target.checked) {
+                      for (const h of list) next.add(h.id)
+                    }
+                    setSelected(next)
+                  }}
+                />
+              </div>
+            )}
           </div>
           {!empty && list.map((h, i) => {
             const seconds = typeof h.durationMs === 'number' ? (h.durationMs / 1000) : (h.durationSeconds || 1)
@@ -69,6 +103,20 @@ export default function HighscoreTable({ scores, highlightName, highlightCps, sh
                 <div role="cell" className="hs-cell hs-right" style={{ fontVariantNumeric: 'tabular-nums' }}>{timeText}</div>
                 <div role="cell" className="hs-cell hs-right" style={{ fontVariantNumeric: 'tabular-nums' }}>{h.charsTyped}</div>
                 <div role="cell" className="hs-cell" style={{ fontVariantNumeric: 'tabular-nums' }}>{dateText}</div>
+                {selectable && (
+                  <div role="cell" className="hs-cell">
+                    <input
+                      type="checkbox"
+                      aria-label={`Select row ${i + 1}`}
+                      checked={selected.has(h.id)}
+                      onChange={(e) => {
+                        const next = new Set(selected)
+                        if (e.target.checked) next.add(h.id); else next.delete(h.id)
+                        setSelected(next)
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             )
           })}

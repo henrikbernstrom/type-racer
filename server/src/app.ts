@@ -137,6 +137,16 @@ export function createApp() {
     return res.status(204).end();
   });
 
+  app.delete("/api/players/batch", (req, res) => {
+    const ids = Array.isArray(req.body?.ids) ? (req.body.ids as unknown[]) : [];
+    const idSet = new Set<string>(ids.filter((v): v is string => typeof v === 'string'));
+    if (idSet.size === 0) return res.status(400).json({ error: "ids must be a non-empty array of strings" });
+    const before = getPlayers();
+    const after = before.filter(p => !idSet.has(p.id));
+    savePlayers(after);
+    return res.status(200).json({ removed: before.length - after.length });
+  });
+
   app.post("/api/players", (req, res) => {
     const parse = playerCreateSchema.safeParse(req.body);
     if (!parse.success) return res.status(400).json({ error: "Invalid payload" });
@@ -175,6 +185,16 @@ export function createApp() {
     // Clear highscores file by saving empty list
     saveAllScores([]);
     return res.status(204).end();
+  });
+
+  app.delete("/api/highscores/batch", (req, res) => {
+    const ids = Array.isArray(req.body?.ids) ? (req.body.ids as unknown[]) : [];
+    const idSet = new Set<string>(ids.filter((v): v is string => typeof v === 'string'));
+    if (idSet.size === 0) return res.status(400).json({ error: "ids must be a non-empty array of strings" });
+    const before = getAllScores();
+    const after = before.filter(s => !idSet.has(s.id));
+    saveAllScores(after);
+    return res.status(200).json({ removed: before.length - after.length });
   });
 
   app.get("/api/highscores/top", (_req, res) => {
