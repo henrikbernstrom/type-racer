@@ -11,12 +11,9 @@ export default function AdminPage() {
   const [tab, setTab] = useState<'data' | 'events'>('data')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [resetting, setResetting] = useState(false)
-  const [resetOk, setResetOk] = useState<string | null>(null)
-  const [clearing, setClearing] = useState(false)
-  const [clearOk, setClearOk] = useState<string | null>(null)
+  
   const [highsKey, setHighsKey] = useState(0)
-  const [modalOpen, setModalOpen] = useState<null | { action: 'reset' | 'clear' | 'deleteHighs' | 'deletePlayers' }>(null)
+  const [modalOpen, setModalOpen] = useState<null | { action: 'deleteHighs' | 'deletePlayers' }>(null)
   const [pwd, setPwd] = useState('')
   const [pwdErr, setPwdErr] = useState<string | null>(null)
   const pwdRef = useRef<HTMLInputElement | null>(null)
@@ -88,26 +85,6 @@ export default function AdminPage() {
     }
   }, [selectedPlayerIds, players.length])
 
-  async function resetHighscoresInner() {
-    setResetOk(null)
-    setError(null)
-    setResetting(true)
-    try {
-      {
-        const qs = new URLSearchParams(); if (eventId) qs.set('eventId', eventId)
-        const res = await fetch(`/api/highscores?${qs.toString()}`, { method: 'DELETE' })
-        if (!res.ok && res.status !== 204) throw new Error('Failed to reset')
-      }
-      setResetOk('Highscores reset')
-      // Remount highscores table to re-fetch from server (now empty)
-      setHighsKey(k => k + 1)
-    } catch (e: any) {
-      setError(e?.message || 'Failed to reset highscores')
-    } finally {
-      setResetting(false)
-    }
-  }
-
   async function deleteSelectedHighscores() {
     if (selectedHighIds.length === 0) return
     try {
@@ -124,25 +101,6 @@ export default function AdminPage() {
       setHighsKey(k => k + 1)
     } catch (e: any) {
       setError(e?.message || 'Failed to delete selected highscores')
-    }
-  }
-
-  async function clearPlayersInner() {
-    setClearOk(null)
-    setError(null)
-    setClearing(true)
-    try {
-      {
-        const qs = new URLSearchParams(); if (eventId) qs.set('eventId', eventId)
-        const res = await fetch(`/api/players?${qs.toString()}`, { method: 'DELETE' })
-        if (!res.ok && res.status !== 204) throw new Error('Failed to clear players')
-      }
-      setPlayers([])
-      setClearOk('Players cleared')
-    } catch (e: any) {
-      setError(e?.message || 'Failed to clear players')
-    } finally {
-      setClearing(false)
     }
   }
 
@@ -166,7 +124,7 @@ export default function AdminPage() {
     }
   }
 
-  function openConfirm(action: 'reset' | 'clear' | 'deleteHighs' | 'deletePlayers') {
+  function openConfirm(action: 'deleteHighs' | 'deletePlayers') {
     setPwd('')
     setPwdErr(null)
     setModalOpen({ action })
@@ -180,11 +138,7 @@ export default function AdminPage() {
     setPwdErr(null)
     const a = modalOpen?.action
     setModalOpen(null)
-    if (a === 'reset') {
-      await resetHighscoresInner()
-    } else if (a === 'clear') {
-      await clearPlayersInner()
-    } else if (a === 'deleteHighs') {
+    if (a === 'deleteHighs') {
       await deleteSelectedHighscores()
     } else if (a === 'deletePlayers') {
       await deleteSelectedPlayers()
@@ -208,14 +162,11 @@ export default function AdminPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <h2 style={{ margin: 0 }}>Highscores</h2>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <button onClick={() => openConfirm('reset')} disabled={resetting} style={{ padding: '10px 14px', fontWeight: 600 }}>
-                  {resetting ? 'Resetting…' : 'Reset Highscores'}
-                </button>
                 <button
                   aria-label="Delete selected highscores"
                   title="Delete selected"
                   disabled={selectedHighIds.length === 0}
-                  style={{ padding: '10px 12px', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                  style={{ padding: '8px', background: '#ef4444', color: '#fff', border: '1px solid #dc2626', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                   onClick={() => openConfirm('deleteHighs')}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -225,7 +176,6 @@ export default function AdminPage() {
                     <path d="M10 11v6M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
                 </button>
-                {resetOk && <span style={{ marginLeft: 4, color: '#16a34a' }}>{resetOk}</span>}
               </div>
             </div>
             <HighscoreTable key={highsKey} showEmail showWhenEmpty onSelectionChange={setSelectedHighIds} eventId={eventId} />
@@ -233,14 +183,11 @@ export default function AdminPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0 12px' }}>
               <h2 style={{ margin: 0 }}>Players</h2>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <button onClick={() => openConfirm('clear')} disabled={clearing} style={{ padding: '10px 14px', fontWeight: 600 }}>
-                  {clearing ? 'Clearing…' : 'Clear Players'}
-                </button>
                 <button
                   aria-label="Delete selected players"
                   title="Delete selected"
                   disabled={selectedPlayerIds.size === 0}
-                  style={{ padding: '10px 12px', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                  style={{ padding: '8px', background: '#ef4444', color: '#fff', border: '1px solid #dc2626', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                   onClick={() => openConfirm('deletePlayers')}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -250,7 +197,6 @@ export default function AdminPage() {
                     <path d="M10 11v6M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
                 </button>
-                {clearOk && <span style={{ marginLeft: 4, color: '#16a34a' }}>{clearOk}</span>}
               </div>
             </div>
             {loading && <div>Loading…</div>}
@@ -326,13 +272,9 @@ export default function AdminPage() {
           <div role="dialog" aria-modal="true" aria-labelledby="admin-confirm-title" className="panel" style={{ maxWidth: 420, width: '90%' }}>
             <h3 id="admin-confirm-title" style={{ marginTop: 0 }}>Confirm admin action</h3>
             <p style={{ marginTop: 0 }}>
-              Type the admin password to {modalOpen.action === 'reset'
-                ? 'reset all highscores'
-                : modalOpen.action === 'clear'
-                  ? 'clear all players'
-                  : modalOpen.action === 'deleteHighs'
-                    ? 'delete selected highscores'
-                    : 'delete selected players'}.
+              Type the admin password to {modalOpen.action === 'deleteHighs'
+                ? 'delete selected highscores'
+                : 'delete selected players'}.
             </p>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <input

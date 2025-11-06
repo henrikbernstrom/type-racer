@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 export type EventInfo = { id: string; name: string; description?: string; date?: string; createdAt: string; active?: boolean }
@@ -11,9 +11,11 @@ export default function AdminEvents() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [date, setDate] = useState('')
-  const [modalOpen, setModalOpen] = useState<null | { id: string }>(null)
+  const [modalOpen, setModalOpen] = useState<null | { ids: string[] }>(null)
   const [pwd, setPwd] = useState('')
   const [pwdErr, setPwdErr] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const headerChk = useRef<HTMLInputElement | null>(null)
 
   async function load() {
     setLoading(true)
@@ -30,6 +32,18 @@ export default function AdminEvents() {
   }
 
   useEffect(() => { void load() }, [])
+
+  // Clear selection when list changes; update header indeterminate when selection updates
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [events])
+
+  useEffect(() => {
+    if (headerChk.current) {
+      const eligibleCount = events.filter(e => e.id !== 'default' && !e.active).length
+      headerChk.current.indeterminate = selectedIds.size > 0 && selectedIds.size < eligibleCount
+    }
+  }, [selectedIds, events])
 
   // ESC cancels editing (unless delete modal is open)
   useEffect(() => {
@@ -108,12 +122,20 @@ export default function AdminEvents() {
 
   async function confirmDelete() {
     if (pwd !== 'jayway') { setPwdErr('Wrong password'); return }
-    const id = modalOpen?.id
-    if (!id) return
+    const ids = modalOpen?.ids || []
+    if (ids.length === 0) return
     setPwdErr(null)
     setModalOpen(null)
     setPwd('')
-    await deleteEvent(id)
+    // Delete sequentially to keep server operations simple
+    for (const id of ids) {
+      const ev = events.find(e => e.id === id)
+      // skip default or active just in case
+      if (!ev || ev.id === 'default' || ev.active) continue
+      await deleteEvent(id)
+    }
+    setSelectedIds(new Set())
+    await load()
   }
 
   return (
@@ -123,25 +145,72 @@ export default function AdminEvents() {
       {loading ? (<div>Loading…</div>) : (
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
           <div>
-            <h3 style={{ marginTop: 0 }}>Existing events</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <h3 style={{ marginTop: 0, marginBottom: 0 }}>Existing events</h3>
+              <button
+                onClick={() => setModalOpen({ ids: Array.from(selectedIds).filter(id => {
+                  const ev = events.find(e => e.id === id)
+                  return !!ev && !ev.active && ev.id !== 'default'
+                }) })}
+                disabled={Array.from(selectedIds).filter(id => {
+                  const ev = events.find(e => e.id === id)
+                  return !!ev && !ev.active && ev.id !== 'default'
+                }).length === 0}
+                title="Delete selected"
+                aria-label="Delete selected events"
+                style={{ padding: '8px', background: '#ef4444', color: '#fff', border: '1px solid #dc2626', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M10 11v6M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
             <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }}>
-              <div className="hs-header" style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 240px', alignItems: 'center' }}>
+              <div className="hs-header" style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr max-content max-content', alignItems: 'center' }}>
                 <div className="hs-cell" style={{ fontWeight: 700 }}>Name</div>
                 <div className="hs-cell">Date</div>
                 <div className="hs-cell">Active</div>
                 <div className="hs-cell">Actions</div>
+                <div className="hs-cell" role="columnheader">
+                  <input
+                    ref={headerChk}
+                    type="checkbox"
+                    aria-label="Select all events"
+                    checked={(() => { const eligible = events.filter(e => e.id !== 'default' && !e.active).length; return selectedIds.size > 0 && selectedIds.size === eligible })()}
+                    onChange={(e) => {
+                      const next = new Set<string>()
+                      if (e.target.checked) {
+                        for (const ev of events) { if (ev.id !== 'default' && !ev.active) next.add(ev.id) }
+                      }
+                      setSelectedIds(next)
+                    }}
+                  />
+                </div>
               </div>
               {events.map(ev => (
-                <div key={ev.id} className="hs-row" style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 240px', alignItems: 'center' }}>
+                <div key={ev.id} className="hs-row" style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr max-content max-content', alignItems: 'center' }}>
                   <div className="hs-cell">{ev.name}</div>
                   <div className="hs-cell">{ev.date || '-'}</div>
                   <div className="hs-cell">{ev.active ? 'Yes' : 'No'}</div>
                   <div className="hs-cell" style={{ display: 'inline-flex', gap: 8 }}>
                     <button onClick={() => setEditing(ev)} style={{ padding: '8px 10px' }}>Edit</button>
                     <button onClick={() => activate(ev.id)} disabled={!!ev.active} style={{ padding: '8px 10px' }}>Activate</button>
-                    <button onClick={() => setModalOpen({ id: ev.id })} disabled={ev.id === 'default'} title="Delete" style={{ padding: '8px 10px', background: '#ef4444', color: '#fff', border: '1px solid #dc2626', borderRadius: 6 }}>
-                      Delete
-                    </button>
+                  </div>
+                  <div className="hs-cell" role="cell">
+                    <input
+                      type="checkbox"
+                      aria-label={`Select event ${ev.name}`}
+                      disabled={ev.id === 'default' || !!ev.active}
+                      checked={selectedIds.has(ev.id)}
+                      onChange={(e) => {
+                        const next = new Set(selectedIds)
+                        if (e.target.checked) next.add(ev.id); else next.delete(ev.id)
+                        setSelectedIds(next)
+                      }}
+                    />
                   </div>
                 </div>
               ))}
