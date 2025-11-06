@@ -1,10 +1,10 @@
 [
   {
     "id": "default",
-    "name": "Default",
+    "name": "ITE Fair",
     "createdAt": "2025-11-06T13:31:49.051Z",
     "active": true,
-    "description": "",
+    "description": "The ITE Fair in Halmstad.",
     "date": "2025-11-05"
   },
   {
