@@ -128,7 +128,7 @@ body {
 
 /* Dark mode tables on admin (non-site-bg pages): readable headers/text */
 @media (prefers-color-scheme: dark) {
-  .hs-table { background: #111827; }
+  .hs-table { background: transparent; }
   .hs-header { background: #1f2937; color: #f9fafb; font-weight: 700; }
   .hs-cell { color: #e5e7eb; }
   .hs-header .hs-cell { color: #292a2b; }

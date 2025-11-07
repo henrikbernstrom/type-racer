@@ -11,15 +11,8 @@
     "id": "25cab05b-8139-48b8-87b5-c8731acc3ba0",
     "name": "KLunch 1/12 2025",
     "description": "Vi håller en KLunch och visar vår lilla Type Racer.",
-    "date": "2025-12-01",
+    "date": "2025-11-04",
     "createdAt": "2025-11-06T13:53:51.524Z",
-    "active": false
-  },
-  {
-    "id": "612ac7fa-3ee9-4ad6-990b-8209af253808",
-    "name": "Coming event",
-    "date": "2026-01-03",
-    "createdAt": "2025-11-06T15:03:00.254Z",
     "active": false
   }
 ]

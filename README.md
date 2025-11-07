@@ -1,5 +1,9 @@
 # Type Competition Highscore
 
+## About this project
+
+This app is intentionally (almost exclusively) vibe coded. It exists to experiment with vibe coding as a way of building software, and to have something playful to hand to visitors at IT fairs. Expect rapid, pragmatic decisions, evolving structure, and a focus on delivering a fun demo over strict architecture.
+
 ## Prerequisites
 
 - Node.js 18+

@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "id": "tn0e16e1sz9pjhu99fsiu",
+    "name": "Test",
+    "cps": 4.493314824285819,
+    "charsTyped": 123,
+    "durationSeconds": 27,
+    "durationMs": 27374,
+    "email": "test@flight.com",
+    "timestamp": "2025-11-06T15:15:04.738Z"
+  }
+]
